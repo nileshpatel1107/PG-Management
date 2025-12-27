@@ -1,0 +1,51 @@
+using AutoMapper;
+using PGMS.Application.DTOs.PG;
+using PGMS.Domain.Entities;
+using PGMS.Domain.Interfaces;
+
+namespace PGMS.Application.Services;
+
+public class PGService : IPGService
+{
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public PGService(IUnitOfWork unitOfWork, IMapper mapper)
+    {
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
+
+    public async Task<PGDto> CreatePGAsync(CreatePGRequest request, Guid ownerId)
+    {
+        var owner = await _unitOfWork.Users.GetByIdAsync(ownerId);
+        if (owner == null)
+        {
+            throw new KeyNotFoundException("Owner not found");
+        }
+
+        var pg = new PG
+        {
+            Name = request.Name,
+            Address = request.Address,
+            OwnerId = ownerId
+        };
+
+        await _unitOfWork.PGs.AddAsync(pg);
+        await _unitOfWork.SaveChangesAsync();
+
+        return _mapper.Map<PGDto>(pg);
+    }
+
+    public async Task<PGDto> GetPGByIdAsync(Guid id)
+    {
+        var pg = await _unitOfWork.PGs.GetByIdAsync(id);
+        if (pg == null)
+        {
+            throw new KeyNotFoundException("PG not found");
+        }
+
+        return _mapper.Map<PGDto>(pg);
+    }
+}
+
