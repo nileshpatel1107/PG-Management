@@ -1,0 +1,67 @@
+trigger:
+- master
+
+pool:
+  name: self-hosted-pool   # Your agent pool name
+
+variables:
+  buildConfiguration: 'Release'
+
+stages:
+
+# ===============================
+# BUILD STAGE
+# ===============================
+- stage: Build
+  displayName: Build Stage
+  jobs:
+  - job: BuildJob
+    steps:
+
+    - checkout: self
+
+    # Install Node (for Vite frontend)
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '20.x'
+
+    # Build Frontend
+    - script: |
+        cd Client
+        npm install
+        npm run build
+      displayName: Build Frontend
+
+    # Publish Backend
+    - task: DotNetCoreCLI@2
+      displayName: Publish Backend
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        projects: 'Server/*.csproj'
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/backend'
+        zipAfterPublish: true
+
+    # Publish artifacts
+    - publish: $(Build.ArtifactStagingDirectory)/backend
+      artifact: backend
+
+
+# ===============================
+# DEPLOY BACKEND
+# ===============================
+- stage: Deploy_Backend
+  displayName: Deploy Backend
+  dependsOn: Build
+  jobs:
+  - job: DeployAPI
+    steps:
+
+    - download: current
+      artifact: backend
+
+    - task: AzureWebApp@1
+      inputs:
+        azureSubscription: 'azure-devops-conn'
+        appName: 'pg-management-api'
+        package: '$(Pipeline.Workspace)/backend/*.zip'
