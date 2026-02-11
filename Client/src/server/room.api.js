@@ -6,12 +6,21 @@ import http from "./http";
 
 export const roomApi = {
   /**
+   * Get all rooms
+   * @returns {Promise<Object>} List of all rooms
+   */
+  getAll: async () => {
+    const response = await http.get("/rooms");
+    return response.data;
+  },
+
+  /**
    * Get rooms by PG ID
    * @param {string|number} pgId - PG ID
    * @returns {Promise<Object>} List of rooms
    */
   getByPgId: async (pgId) => {
-    const response = await http.get(`/rooms/${pgId}`);
+    const response = await http.get(`/rooms/pg/${pgId}`);
     return response.data;
   },
 
@@ -55,6 +64,7 @@ export const roomApi = {
     await http.delete(`/rooms/${id}`);
   },
 };
+
 
 
 

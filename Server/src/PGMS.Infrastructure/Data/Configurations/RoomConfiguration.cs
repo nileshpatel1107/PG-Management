@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PGMS.Domain.Entities;
 
@@ -31,6 +32,50 @@ public class RoomConfiguration : IEntityTypeConfiguration<Room>
         builder.Property(r => r.IsAvailable)
             .HasColumnName("is_available")
             .IsRequired();
+
+        builder.Property(r => r.Description)
+            .HasColumnName("description");
+
+        builder.Property(r => r.FloorNumber)
+            .HasColumnName("floor_number");
+
+        builder.Property(r => r.RoomType)
+            .HasColumnName("room_type")
+            .HasMaxLength(50)
+            .HasDefaultValue("Standard");
+
+        builder.Property(r => r.Price)
+            .HasColumnName("price")
+            .HasColumnType("decimal(10,2)");
+
+        builder.Property(r => r.Amenities)
+            .HasColumnName("amenities")
+            .HasColumnType("text[]")
+            .HasConversion(
+                v => v == null || v.Count == 0 ? Array.Empty<string>() : v.ToArray(),
+                v => v == null || v.Length == 0 ? new List<string>() : v.ToList(),
+                new ValueComparer<List<string>>(
+                    (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    c => c.ToList()));
+
+        builder.Property(r => r.Images)
+            .HasColumnName("images")
+            .HasColumnType("text[]")
+            .HasConversion(
+                v => v == null || v.Count == 0 ? Array.Empty<string>() : v.ToArray(),
+                v => v == null || v.Length == 0 ? new List<string>() : v.ToList(),
+                new ValueComparer<List<string>>(
+                    (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    c => c.ToList()));
+
+        builder.Property(r => r.OccupiedBeds)
+            .HasColumnName("occupied_beds")
+            .HasDefaultValue(0);
+
+        builder.HasIndex(r => r.RoomType);
+        builder.HasIndex(r => r.FloorNumber);
 
         builder.Property(r => r.CreatedAt)
             .HasColumnName("created_at")

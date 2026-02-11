@@ -8,11 +8,9 @@ import {
 } from "@headlessui/react";
 import {
   EllipsisHorizontalIcon,
-  EnvelopeIcon,
   EyeIcon,
   PencilIcon,
   TrashIcon,
-  UserIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useCallback, useState } from "react";
@@ -63,6 +61,14 @@ export function RowActions({ row, table }) {
       await userApi.delete(user.id);
       table.options.meta?.deleteRow(row);
       setDeleteSuccess(true);
+      // Refresh the user list after successful deletion
+      if (table.options.meta?.refreshData) {
+        table.options.meta.refreshData();
+      }
+      // Close modal after a short delay to show success state
+      setTimeout(() => {
+        closeModal();
+      }, 1000);
     } catch (error) {
       console.error("Failed to delete user:", error);
       setDeleteError(true);
@@ -88,12 +94,6 @@ export function RowActions({ row, table }) {
   return (
     <>
       <div className="flex justify-center">
-        <Button variant="flat" isIcon className="size-7 rounded-full">
-          <UserIcon className="size-4.5" />
-        </Button>
-        <Button variant="flat" isIcon className="size-7 rounded-full">
-          <EnvelopeIcon className="size-4.5" />
-        </Button>
         <Menu as="div" className="relative inline-block text-left">
           <MenuButton
             as={Button}
@@ -177,6 +177,7 @@ RowActions.propTypes = {
   row: PropTypes.object,
   table: PropTypes.object,
 };
+
 
 
 

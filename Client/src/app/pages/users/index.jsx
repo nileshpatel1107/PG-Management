@@ -26,6 +26,7 @@ import { ListView } from "./ListView";
 import { userApi } from "server/api";
 import { useAuthContext } from "app/contexts/auth/context";
 import UserFormModal from "./UserFormModal";
+import UserViewModal from "./UserViewModal";
 
 // ----------------------------------------------------------------------
 
@@ -35,6 +36,8 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [viewingUser, setViewingUser] = useState(null);
 
   const [tableSettings, setTableSettings] = useState({
     enableFullScreen: false,
@@ -93,6 +96,11 @@ export default function UsersPage() {
     setIsFormOpen(true);
   };
 
+  const handleView = (user) => {
+    setViewingUser(user);
+    setIsViewOpen(true);
+  };
+
   const handleFormSubmit = async () => {
     await fetchUsers();
     setIsFormOpen(false);
@@ -147,10 +155,8 @@ export default function UsersPage() {
       setTableSettings,
       setViewType,
       onEdit: handleEdit,
-      onView: (user) => {
-        // Handle view action if needed
-        console.log("View user:", user);
-      },
+      onView: handleView,
+      refreshData: fetchUsers,
     },
     filterFns: {
       fuzzy: fuzzyFilter,
@@ -312,6 +318,17 @@ export default function UsersPage() {
           }}
           onSubmit={handleFormSubmit}
           user={editingUser}
+        />
+      )}
+
+      {isViewOpen && (
+        <UserViewModal
+          isOpen={isViewOpen}
+          onClose={() => {
+            setIsViewOpen(false);
+            setViewingUser(null);
+          }}
+          user={viewingUser}
         />
       )}
     </Page>

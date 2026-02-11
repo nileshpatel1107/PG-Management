@@ -6,5 +6,6 @@ public interface IPGService
 {
     Task<PGDto> CreatePGAsync(CreatePGRequest request, Guid ownerId);
     Task<PGDto> GetPGByIdAsync(Guid id);
+    Task<IEnumerable<PGDto>> GetAllPGsAsync(Guid? userId = null);
 }
 

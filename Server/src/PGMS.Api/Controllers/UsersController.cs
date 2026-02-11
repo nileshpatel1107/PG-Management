@@ -84,10 +84,13 @@ public class UsersController : ControllerBase
             var currentUser = await _userService.GetCurrentUserAsync(userId);
             var allUsers = await _userService.GetAllUsersAsync();
 
-            // PGAdmin can only see users in their PG
+            // PGAdmin can only see users in their PG and cannot see SuperAdmin users
             if (currentUser.Role == Role.PGAdmin)
             {
-                allUsers = allUsers.Where(u => u.PGId == currentUser.PGId);
+                allUsers = allUsers.Where(u => 
+                    u.PGId == currentUser.PGId && 
+                    u.Role != Role.SuperAdmin
+                );
             }
 
             return Ok(new ApiResponse<IEnumerable<UserDto>>

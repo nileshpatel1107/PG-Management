@@ -49,10 +49,26 @@ export default function PGFormModal({
   const handleFormSubmit = async (data) => {
     try {
       setLoading(true);
+      
+      // Validate required fields
+      if (!data.name || !data.name.trim()) {
+        alert("PG name is required");
+        setLoading(false);
+        return;
+      }
+
+      if (!data.address || !data.address.trim()) {
+        alert("PG address is required");
+        setLoading(false);
+        return;
+      }
+
       const pgData = {
-        name: data.name,
-        address: data.address,
+        name: data.name.trim(),
+        address: data.address.trim(),
       };
+
+      console.log("Sending PG data:", pgData);
 
       if (isEdit) {
         await pgApi.update(pg.id, pgData);
@@ -64,7 +80,8 @@ export default function PGFormModal({
       reset();
     } catch (error) {
       console.error("Failed to save PG:", error);
-      alert(error?.message || "Failed to save PG");
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to save PG";
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -183,6 +200,7 @@ export default function PGFormModal({
     </Transition>
   );
 }
+
 
 
 

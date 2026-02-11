@@ -47,5 +47,23 @@ public class PGService : IPGService
 
         return _mapper.Map<PGDto>(pg);
     }
+
+    public async Task<IEnumerable<PGDto>> GetAllPGsAsync(Guid? userId = null)
+    {
+        IEnumerable<PG> pgs;
+        
+        if (userId.HasValue)
+        {
+            // Filter by owner ID (for PGAdmin - they only see PGs they own)
+            pgs = await _unitOfWork.PGs.FindAsync(pg => pg.OwnerId == userId.Value);
+        }
+        else
+        {
+            // Get all PGs (for SuperAdmin)
+            pgs = await _unitOfWork.PGs.GetAllAsync();
+        }
+
+        return _mapper.Map<IEnumerable<PGDto>>(pgs);
+    }
 }
 

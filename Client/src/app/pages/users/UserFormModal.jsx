@@ -32,7 +32,10 @@ const schema = Yup.object().shape({
           .min(6, "Password must be at least 6 characters"),
       otherwise: (schema) => schema.notRequired(),
     }),
-  roleValue: Yup.number().required("Role is required"),
+  roleValue: Yup.number()
+    .required("Role is required")
+    .min(1, "Please select a role")
+    .max(4, "Invalid role selected"),
   isActive: Yup.boolean(),
 });
 
@@ -139,11 +142,18 @@ export default function UserFormModal({
 
   // Map roles to dropdown options: value = role_value, label = name
   // Memoize to prevent infinite loops
+  // Add a default "Select" option at the beginning
   const roleOptions = useMemo(() => {
-    return roles.map(role => ({
+    const options = roles.map(role => ({
       value: role.role_value || role.roleValue, // Database column: role_value
       label: role.name || role.Name, // Database column: name
     }));
+    
+    // Add default "Select Role" option at the beginning (disabled, empty value)
+    return [
+      { value: "", label: "Select Role", disabled: true },
+      ...options
+    ];
   }, [roles]);
 
   const {
@@ -156,24 +166,15 @@ export default function UserFormModal({
     defaultValues: {
       email: user?.email || "",
       password: "",
-      roleValue: user?.roleValue || user?.role || roleOptions[0]?.value || "",
+      roleValue: user?.roleValue || user?.role || "",
       isActive: user?.isActive ?? true,
     },
     context: { isEdit },
   });
 
   // Update form when roles are loaded (only for new users, not editing)
-  useEffect(() => {
-    if (roleOptions.length > 0 && !user && !isEdit) {
-      reset({
-        email: "",
-        password: "",
-        roleValue: roleOptions[0]?.value || "",
-        isActive: true,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roleOptions.length, isEdit]); // Only depend on length and isEdit, not the full array
+  // Don't auto-select a role - let user choose
+  // useEffect removed - we want empty default
 
   const handleFormSubmit = async (data) => {
     try {
@@ -189,15 +190,23 @@ export default function UserFormModal({
       };
       
       const roleValue = Number(data.roleValue);
+      
+      // Validate roleValue is not empty
+      if (!roleValue || roleValue < 1 || roleValue > 4) {
+        throw new Error("Please select a valid role");
+      }
+      
       const roleName = roleValueMap[roleValue];
       
       if (!roleName) {
         throw new Error(`Invalid role value: ${roleValue}`);
       }
       
+      // ASP.NET Core can accept enum as string name (e.g., "PGAdmin")
+      // Based on RegisterRequest which uses string, we'll send as string
       const userData = {
         email: data.email,
-        role: roleName, // Send as enum name string (e.g., "PGAdmin") - ASP.NET Core will parse it
+        role: roleName, // Send as enum name string (e.g., "PGAdmin", "Staff", "Tenant")
         isActive: data.isActive,
       };
 

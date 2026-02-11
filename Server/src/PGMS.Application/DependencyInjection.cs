@@ -1,4 +1,5 @@
 using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection;
 using PGMS.Application.Services;
 using System.Reflection;
@@ -14,6 +15,8 @@ public static class DependencyInjection
 
         // FluentValidation
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddFluentValidationAutoValidation();
+        services.AddFluentValidationClientsideAdapters();
 
         // Services
         services.AddScoped<IAuthService, AuthService>();
